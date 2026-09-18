@@ -29,6 +29,7 @@ class GeocercaSerializer(GeoFeatureModelSerializer):
         fields = [
             "id",
             "productor",
+            "producto",
             "nombre",
             "descripcion",
             "tipo",

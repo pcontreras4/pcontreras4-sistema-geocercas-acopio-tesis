@@ -20,7 +20,7 @@ export default function DrawPolygonControl({ onCreated }) {
     const drawControl = new L.Control.Draw({
       draw: {
         polygon: {
-          allowIntersection: false,
+          allowIntersection: true,
           showArea: true,
         },
         polyline: false,

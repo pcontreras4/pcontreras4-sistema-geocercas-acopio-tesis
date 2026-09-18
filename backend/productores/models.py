@@ -30,6 +30,9 @@ class Geocerca(gis_models.Model):
     productor = models.ForeignKey(
         Productor, on_delete=models.CASCADE, related_name="geocercas"
     )
+    producto = models.ForeignKey(
+        "catalogos.Producto", on_delete=models.PROTECT, related_name="geocercas"
+    )
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     tipo = models.CharField(

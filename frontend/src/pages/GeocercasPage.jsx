@@ -13,14 +13,40 @@ const TIPO_OPTIONS = [
   { value: "otro", label: "Otro" },
 ];
 
+// Paleta categórica: un color estable por id de producto (se repite si hay más
+// de 10 productos, pero para el catálogo típico de una tesis alcanza sobrado).
+const PALETA_PRODUCTOS = [
+  "#2f7d4f",
+  "#8a5a2f",
+  "#2f5d8a",
+  "#b3452c",
+  "#6a4c93",
+  "#c9a227",
+  "#1b998b",
+  "#e07a5f",
+  "#3d5a80",
+  "#9b5de5",
+];
+
+function colorPorProducto(productoId) {
+  if (!productoId) return "#9aa39c";
+  const idx = (Number(productoId) - 1) % PALETA_PRODUCTOS.length;
+  return PALETA_PRODUCTOS[idx >= 0 ? idx : 0];
+}
+
 export default function GeocercasPage() {
   const geocercas = useApiResource("geocercas");
   const productores = useApiResource("productores");
+  const productos = useApiResource("productos");
 
   const [drawing, setDrawing] = useState(false);
   const [pendingGeometry, setPendingGeometry] = useState(null);
-  const [form, setForm] = useState({ nombre: "", tipo: "parcela", productor: "" });
+  const [form, setForm] = useState({ nombre: "", tipo: "parcela", productor: "", producto: "" });
   const [saving, setSaving] = useState(false);
+
+  function nombreProducto(id) {
+    return productos.items.find((p) => String(p.id) === String(id))?.nombre_producto ?? "";
+  }
 
   function handleDrawn(geometry) {
     setPendingGeometry(geometry);
@@ -38,10 +64,11 @@ export default function GeocercasPage() {
           nombre: form.nombre,
           tipo: form.tipo,
           productor: form.productor,
+          producto: form.producto,
         },
       });
       setPendingGeometry(null);
-      setForm({ nombre: "", tipo: "parcela", productor: "" });
+      setForm({ nombre: "", tipo: "parcela", productor: "", producto: "" });
       setDrawing(false);
       await geocercas.reload();
     } finally {
@@ -54,6 +81,15 @@ export default function GeocercasPage() {
     await geocercas.deleteItem(id);
   }
 
+  const productosEnUso = [
+    ...new Map(
+      (geocercas.items?.features ?? [])
+        .map((f) => f.properties?.producto)
+        .filter(Boolean)
+        .map((id) => [id, id])
+    ).keys(),
+  ];
+
   return (
     <section className="crud-page">
       <h1>Geocercas</h1>
@@ -64,6 +100,17 @@ export default function GeocercasPage() {
         </button>
       </div>
 
+      {productosEnUso.length > 0 && (
+        <div className="map-legend">
+          {productosEnUso.map((id) => (
+            <span key={id} className="legend-item">
+              <span className="legend-swatch" style={{ background: colorPorProducto(id) }} />
+              {nombreProducto(id)}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="map-wrapper">
         <MapContainer center={AREQUIPA_CENTER} zoom={12} style={{ height: 480 }}>
           <TileLayer
@@ -71,8 +118,20 @@ export default function GeocercasPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {geocercas.items?.features?.map((feature) => (
-            <GeoJSON key={feature.id} data={feature}>
-              <Popup>{feature.properties?.nombre}</Popup>
+            <GeoJSON
+              key={feature.id}
+              data={feature}
+              style={{
+                color: colorPorProducto(feature.properties?.producto),
+                fillColor: colorPorProducto(feature.properties?.producto),
+                fillOpacity: 0.4,
+              }}
+            >
+              <Popup>
+                {feature.properties?.nombre}
+                <br />
+                {nombreProducto(feature.properties?.producto)}
+              </Popup>
             </GeoJSON>
           ))}
           {drawing && <DrawPolygonControl onCreated={handleDrawn} />}
@@ -118,6 +177,21 @@ export default function GeocercasPage() {
               ))}
             </select>
           </div>
+          <div className="form-field">
+            <label>Producto cultivado</label>
+            <select
+              value={form.producto}
+              onChange={(e) => setForm({ ...form, producto: e.target.value })}
+              required
+            >
+              <option value="">Selecciona...</option>
+              {productos.items.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre_producto}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="form-actions">
             <button type="submit" disabled={saving}>
               Guardar geocerca
@@ -133,6 +207,7 @@ export default function GeocercasPage() {
         <thead>
           <tr>
             <th>Nombre</th>
+            <th>Producto</th>
             <th>Tipo</th>
             <th>Productor</th>
             <th>Estado</th>
@@ -143,6 +218,13 @@ export default function GeocercasPage() {
           {geocercas.items?.features?.map((feature) => (
             <tr key={feature.id}>
               <td>{feature.properties?.nombre}</td>
+              <td>
+                <span
+                  className="legend-swatch"
+                  style={{ background: colorPorProducto(feature.properties?.producto) }}
+                />
+                {nombreProducto(feature.properties?.producto)}
+              </td>
               <td>{feature.properties?.tipo}</td>
               <td>{feature.properties?.productor}</td>
               <td>{feature.properties?.estado}</td>
