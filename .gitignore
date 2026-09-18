@@ -1,0 +1,21 @@
+# Python / Django
+backend/venv/
+backend/.venv/
+__pycache__/
+*.pyc
+backend/**/migrations/__pycache__/
+backend/staticfiles/
+backend/media/
+*.log
+.env
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS
+.DS_Store
+
+# Herramientas de desarrollo (Claude Code)
+.claude/
