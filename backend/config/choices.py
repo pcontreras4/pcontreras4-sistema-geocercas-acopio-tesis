@@ -6,6 +6,11 @@ class EstadoRegistro(models.TextChoices):
     INACTIVO = "inactivo", "Inactivo"
 
 
+class RolUsuario(models.TextChoices):
+    ADMINISTRADOR = "administrador", "Administrador"
+    ACOPIADOR = "acopiador", "Acopiador"
+
+
 class TipoSeguimiento(models.TextChoices):
     VISITA = "visita", "Visita"
     LLAMADA = "llamada", "Llamada"

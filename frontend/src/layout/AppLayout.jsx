@@ -13,15 +13,24 @@ const NAV_ITEMS = [
   { to: "/ventas", label: "Ventas" },
 ];
 
+const ADMIN_NAV_ITEM = { to: "/acopiadores", label: "Acopiadores" };
+
 export default function AppLayout() {
-  const { logout } = useAuth();
+  const { logout, isAdmin, user } = useAuth();
+  const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <h2>Acopio Agrícola</h2>
+        {user && (
+          <p className="sidebar-user">
+            {user.first_name || user.username}
+            <span className="sidebar-role">{isAdmin ? "Administrador" : "Acopiador"}</span>
+          </p>
+        )}
         <nav>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

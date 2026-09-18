@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import AppLayout from "./layout/AppLayout";
+import AcopiadoresPage from "./pages/AcopiadoresPage";
 import ClasificacionesPage from "./pages/ClasificacionesPage";
 import ComprasPage from "./pages/ComprasPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -29,6 +31,9 @@ export default function App() {
             <Route path="/seguimientos" element={<SeguimientosPage />} />
             <Route path="/compras" element={<ComprasPage />} />
             <Route path="/ventas" element={<VentasPage />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/acopiadores" element={<AcopiadoresPage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

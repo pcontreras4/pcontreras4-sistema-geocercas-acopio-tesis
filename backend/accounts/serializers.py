@@ -18,6 +18,7 @@ class AcopiadorSerializer(serializers.ModelSerializer):
             "dni",
             "telefono",
             "estado",
+            "rol",
             "password",
         ]
 

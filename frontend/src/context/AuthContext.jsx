@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!localStorage.getItem("access_token")
   );
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -15,6 +16,17 @@ export function AuthProvider({ children }) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUser(null);
+      return;
+    }
+    apiClient
+      .get("/auth/me/")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, [isAuthenticated]);
 
   async function login(username, password) {
     setLoading(true);
@@ -39,8 +51,10 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
   }
 
+  const isAdmin = user?.rol === "administrador";
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading, error, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, isAdmin, loading, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
