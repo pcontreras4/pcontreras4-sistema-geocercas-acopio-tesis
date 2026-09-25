@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "acopio",
     "ventas",
     "dashboard",
+    "inventario",
 ]
 
 MIDDLEWARE = [

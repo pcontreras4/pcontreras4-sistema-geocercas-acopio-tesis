@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: "/seguimientos", label: "Seguimiento" },
   { to: "/compras", label: "Acopio (compras)" },
   { to: "/ventas", label: "Ventas" },
+  { to: "/inventario", label: "Inventario" },
 ];
 
 const ADMIN_NAV_ITEM = { to: "/acopiadores", label: "Acopiadores" };

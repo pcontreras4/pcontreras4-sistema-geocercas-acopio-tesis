@@ -8,6 +8,7 @@ import ClasificacionesPage from "./pages/ClasificacionesPage";
 import ComprasPage from "./pages/ComprasPage";
 import DashboardPage from "./pages/DashboardPage";
 import GeocercasPage from "./pages/GeocercasPage";
+import InventarioPage from "./pages/InventarioPage";
 import LoginPage from "./pages/LoginPage";
 import PadronesPage from "./pages/PadronesPage";
 import ProductoresPage from "./pages/ProductoresPage";
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/seguimientos" element={<SeguimientosPage />} />
             <Route path="/compras" element={<ComprasPage />} />
             <Route path="/ventas" element={<VentasPage />} />
+            <Route path="/inventario" element={<InventarioPage />} />
             <Route element={<AdminRoute />}>
               <Route path="/acopiadores" element={<AcopiadoresPage />} />
             </Route>

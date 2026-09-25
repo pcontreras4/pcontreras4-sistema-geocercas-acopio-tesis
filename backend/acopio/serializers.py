@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from catalogos.validators import validar_clasificacion_del_producto
+
 from .models import Almacenamiento, CompraAcopio, DetalleCompra, Transporte
 
 
@@ -8,6 +10,9 @@ class DetalleCompraSerializer(serializers.ModelSerializer):
         model = DetalleCompra
         fields = ["id", "producto", "clasificacion", "cantidad", "precio_unitario", "subtotal"]
         read_only_fields = ["subtotal"]
+
+    def validate(self, attrs):
+        return validar_clasificacion_del_producto(attrs)
 
 
 class TransporteSerializer(serializers.ModelSerializer):

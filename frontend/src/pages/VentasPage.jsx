@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import apiClient from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import useApiResource from "../hooks/useApiResource";
 
 const EMPTY_DETALLE = { producto: "", clasificacion: "", cantidad: "", precio_unitario: "" };
@@ -8,6 +9,26 @@ export default function VentasPage() {
   const ventas = useApiResource("ventas");
   const productos = useApiResource("productos");
   const clasificaciones = useApiResource("clasificaciones");
+  const { user } = useAuth();
+
+  const [existencias, setExistencias] = useState({});
+
+  const cargarExistencias = useCallback(() => {
+    if (!user) return;
+    apiClient.get("/inventario/", { params: { acopiador: user.id } }).then((res) => {
+      const mapa = {};
+      res.data.productos.forEach((p) =>
+        p.clasificaciones.forEach((c) => {
+          mapa[`${p.producto}-${c.clasificacion}`] = c.existencia;
+        })
+      );
+      setExistencias(mapa);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    cargarExistencias();
+  }, [cargarExistencias]);
 
   const [cliente, setCliente] = useState("");
   const [puntoVenta, setPuntoVenta] = useState("");
@@ -18,6 +39,36 @@ export default function VentasPage() {
 
   function updateDetalle(index, field, value) {
     setDetalles((prev) => prev.map((d, i) => (i === index ? { ...d, [field]: value } : d)));
+  }
+
+  function clasificacionesDe(productoId) {
+    const producto = productos.items.find((p) => String(p.id) === String(productoId));
+    return clasificaciones.items.filter((c) => producto?.clasificaciones.includes(c.id));
+  }
+
+  function cambiarProducto(index, productoId) {
+    const opciones = clasificacionesDe(productoId);
+    setDetalles((prev) =>
+      prev.map((d, i) =>
+        i === index
+          ? { ...d, producto: productoId, clasificacion: opciones.length === 1 ? String(opciones[0].id) : "" }
+          : d
+      )
+    );
+  }
+
+  function estadoLinea(d, i) {
+    if (!d.producto || !d.clasificacion) return null;
+    const clave = `${d.producto}-${d.clasificacion}`;
+    const primera = detalles.findIndex((x) => `${x.producto}-${x.clasificacion}` === clave);
+    if (primera !== i) {
+      return { tipo: "error", texto: `Ya está en la línea ${primera + 1}: edita esa cantidad.` };
+    }
+    const disponible = existencias[clave] ?? 0;
+    if (Number(d.cantidad) > disponible) {
+      return { tipo: "error", texto: `Stock insuficiente. Disponible: ${disponible}` };
+    }
+    return { tipo: "ok", texto: `Disponible: ${disponible}` };
   }
 
   function addDetalle() {
@@ -57,11 +108,16 @@ export default function VentasPage() {
         setError("Agrega al menos un producto con cantidad y precio.");
         return;
       }
+      if (detalles.some((d, i) => estadoLinea(d, i)?.tipo === "error")) {
+        setError("Corrige las líneas marcadas en rojo antes de registrar la venta.");
+        return;
+      }
       await apiClient.post("/ventas/", payload);
       resetForm();
       await ventas.reload();
-    } catch {
-      setError("No se pudo registrar la venta.");
+      cargarExistencias();
+    } catch (err) {
+      setError(err.response?.data?.detalles?.[0] ?? "No se pudo registrar la venta.");
     } finally {
       setSaving(false);
     }
@@ -70,6 +126,7 @@ export default function VentasPage() {
   async function handleEliminar(id) {
     if (!window.confirm("¿Eliminar esta venta?")) return;
     await ventas.deleteItem(id);
+    cargarExistencias();
   }
 
   return (
@@ -88,8 +145,9 @@ export default function VentasPage() {
 
         <h3>Productos vendidos</h3>
         {detalles.map((d, i) => (
-          <div key={i} className="detalle-row">
-            <select value={d.producto} onChange={(e) => updateDetalle(i, "producto", e.target.value)} required>
+          <div key={i}>
+          <div className="detalle-row">
+            <select value={d.producto} onChange={(e) => cambiarProducto(i, e.target.value)} required>
               <option value="">Producto...</option>
               {productos.items.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -97,9 +155,14 @@ export default function VentasPage() {
                 </option>
               ))}
             </select>
-            <select value={d.clasificacion} onChange={(e) => updateDetalle(i, "clasificacion", e.target.value)} required>
+            <select
+              value={d.clasificacion}
+              onChange={(e) => updateDetalle(i, "clasificacion", e.target.value)}
+              disabled={!d.producto}
+              required
+            >
               <option value="">Clasificación...</option>
-              {clasificaciones.items.map((c) => (
+              {clasificacionesDe(d.producto).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre_clasificacion}
                 </option>
@@ -126,6 +189,10 @@ export default function VentasPage() {
                 Quitar
               </button>
             )}
+          </div>
+          {estadoLinea(d, i) && (
+            <p className={`linea-aviso ${estadoLinea(d, i).tipo}`}>{estadoLinea(d, i).texto}</p>
+          )}
           </div>
         ))}
         <button type="button" onClick={addDetalle}>

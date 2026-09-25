@@ -17,9 +17,26 @@ export default function ComprasPage() {
   const [almacenamiento, setAlmacenamiento] = useState({ ubicacion: "", cantidad: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [errorTabla, setErrorTabla] = useState(null);
 
   function updateDetalle(index, field, value) {
     setDetalles((prev) => prev.map((d, i) => (i === index ? { ...d, [field]: value } : d)));
+  }
+
+  function clasificacionesDe(productoId) {
+    const producto = productos.items.find((p) => String(p.id) === String(productoId));
+    return clasificaciones.items.filter((c) => producto?.clasificaciones.includes(c.id));
+  }
+
+  function cambiarProducto(index, productoId) {
+    const opciones = clasificacionesDe(productoId);
+    setDetalles((prev) =>
+      prev.map((d, i) =>
+        i === index
+          ? { ...d, producto: productoId, clasificacion: opciones.length === 1 ? String(opciones[0].id) : "" }
+          : d
+      )
+    );
   }
 
   function addDetalle() {
@@ -73,7 +90,12 @@ export default function ComprasPage() {
 
   async function handleEliminar(id) {
     if (!window.confirm("¿Eliminar esta compra?")) return;
-    await compras.deleteItem(id);
+    setErrorTabla(null);
+    try {
+      await compras.deleteItem(id);
+    } catch (err) {
+      setErrorTabla(err.response?.data?.detail ?? "No se pudo eliminar la compra.");
+    }
   }
 
   return (
@@ -96,7 +118,7 @@ export default function ComprasPage() {
         <h3>Productos comprados</h3>
         {detalles.map((d, i) => (
           <div key={i} className="detalle-row">
-            <select value={d.producto} onChange={(e) => updateDetalle(i, "producto", e.target.value)} required>
+            <select value={d.producto} onChange={(e) => cambiarProducto(i, e.target.value)} required>
               <option value="">Producto...</option>
               {productos.items.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -104,9 +126,14 @@ export default function ComprasPage() {
                 </option>
               ))}
             </select>
-            <select value={d.clasificacion} onChange={(e) => updateDetalle(i, "clasificacion", e.target.value)} required>
+            <select
+              value={d.clasificacion}
+              onChange={(e) => updateDetalle(i, "clasificacion", e.target.value)}
+              disabled={!d.producto}
+              required
+            >
               <option value="">Clasificación...</option>
-              {clasificaciones.items.map((c) => (
+              {clasificacionesDe(d.producto).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre_clasificacion}
                 </option>
@@ -194,6 +221,8 @@ export default function ComprasPage() {
           </button>
         </div>
       </form>
+
+      {errorTabla && <p className="error">{errorTabla}</p>}
 
       <table className="data-table">
         <thead>

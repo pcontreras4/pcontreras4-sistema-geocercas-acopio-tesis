@@ -25,6 +25,9 @@ class Producto(models.Model):
     nombre_producto = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     unidad_medida = models.CharField(max_length=20)
+    clasificaciones = models.ManyToManyField(
+        "Clasificacion", related_name="productos", db_table="producto_clasificacion"
+    )
     estado = models.CharField(
         max_length=20, choices=EstadoRegistro.choices, default=EstadoRegistro.ACTIVO
     )

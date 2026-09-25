@@ -4,12 +4,14 @@ import { useState } from "react";
  * Tabla CRUD genérica para catálogos simples (Padrón, Producto, Clasificación, Seguimiento...).
  * `fields`: [{ name, label, type: 'text'|'textarea'|'select', options?, required? }]
  * `hasEstado`: si el modelo tiene un campo activo/inactivo estándar (por defecto true).
+ * `deleteMessage`: función opcional (item) => texto de confirmación personalizado, o null para el estándar.
  */
-export default function CrudTable({ title, fields, resource, hasEstado = true }) {
+export default function CrudTable({ title, fields, resource, hasEstado = true, deleteMessage }) {
   const { items, loading, error, createItem, updateItem, deleteItem } = resource;
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(defaultForm(fields));
   const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   function defaultForm(fieldList) {
     const base = hasEstado ? { estado: "activo" } : {};
@@ -44,9 +46,15 @@ export default function CrudTable({ title, fields, resource, hasEstado = true })
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm("¿Eliminar este registro?")) return;
-    await deleteItem(id);
+  async function handleDelete(item) {
+    const message = deleteMessage?.(item) ?? "¿Eliminar este registro?";
+    if (!window.confirm(message)) return;
+    setActionError(null);
+    try {
+      await deleteItem(item.id);
+    } catch (err) {
+      setActionError(err.response?.data?.detail ?? "No se pudo eliminar el registro.");
+    }
   }
 
   return (
@@ -111,6 +119,7 @@ export default function CrudTable({ title, fields, resource, hasEstado = true })
 
       {loading && <p>Cargando...</p>}
       {error && <p className="error">{error}</p>}
+      {actionError && <p className="error">{actionError}</p>}
 
       <table className="data-table">
         <thead>
@@ -131,7 +140,7 @@ export default function CrudTable({ title, fields, resource, hasEstado = true })
               {hasEstado && <td>{item.estado}</td>}
               <td className="row-actions">
                 <button onClick={() => startEdit(item)}>Editar</button>
-                <button onClick={() => handleDelete(item.id)}>Eliminar</button>
+                <button onClick={() => handleDelete(item)}>Eliminar</button>
               </td>
             </tr>
           ))}

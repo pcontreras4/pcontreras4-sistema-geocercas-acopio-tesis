@@ -186,6 +186,25 @@ textarea {
   color: var(--text-muted);
 }
 
+.check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.check-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--text);
+}
+
+.check-item input {
+  width: auto;
+}
+
 .form-actions {
   display: flex;
   gap: 0.5rem;
@@ -306,4 +325,76 @@ textarea {
   margin-top: 0;
   font-size: 0.95rem;
   color: var(--text-muted);
+}
+
+/* Inventario */
+.nota {
+  margin-top: -0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.filtro {
+  max-width: 340px;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filtro label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.inventario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+.inv-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.inv-header h3 {
+  margin: 0;
+}
+
+.unidad {
+  font-weight: normal;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.inv-total {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.negativo {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.linea-aviso {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.linea-aviso.error {
+  color: var(--danger);
 }

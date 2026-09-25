@@ -18,9 +18,23 @@ class PadronSerializer(serializers.ModelSerializer):
 
 
 class ProductoSerializer(serializers.ModelSerializer):
+    clasificaciones = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Clasificacion.objects.all(),
+        allow_empty=False,
+        error_messages={"empty": "Selecciona al menos una clasificación."},
+    )
+
     class Meta:
         model = Producto
-        fields = ["id", "nombre_producto", "descripcion", "unidad_medida", "estado"]
+        fields = [
+            "id",
+            "nombre_producto",
+            "descripcion",
+            "unidad_medida",
+            "clasificaciones",
+            "estado",
+        ]
 
 
 class ClasificacionSerializer(serializers.ModelSerializer):
